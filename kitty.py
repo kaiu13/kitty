@@ -28,9 +28,9 @@ async def on_member_join(member):
     for channel in member.guild.text_channels:
         if channel.permissions_for(member.guild.me).send_messages:
             await channel.send(
-                f"welcome, {member.mention}! ♡\n"
+                f"welcome, {member.mention} ♡\n"
                 "lots of yaps, league & wordle\n"
-                "♡ https://discord.gg/https://discord.gg/asvSXRyW5D"
+                "czech & english chat\n"
             )
             break
 

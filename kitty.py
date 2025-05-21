@@ -26,7 +26,7 @@ async def on_ready():
 @client.event
 async def on_member_join(member):
     # Give "whiskers" role if it exists
-    role = discord.utils.get(member.guild.roles, name="whiskers")
+    role = discord.utils.get(member.guild.roles, name="kitty")
     if role:
         await member.add_roles(role, reason="Autorole on join")
     for channel in member.guild.text_channels:

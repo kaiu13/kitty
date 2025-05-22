@@ -25,7 +25,7 @@ async def on_ready():
 
 @client.event
 async def on_member_join(member):
-    # Give "whiskers" role if it exists
+    # give "kitty" role if it exists
     role = discord.utils.get(member.guild.roles, name="kitty")
     if role:
         await member.add_roles(role, reason="Autorole on join")
@@ -33,7 +33,7 @@ async def on_member_join(member):
         if channel.permissions_for(member.guild.me).send_messages:
             await channel.send(
                 f"welcome, {member.mention} ♡\n"
-                "lots of yaps, league & wordle\n"
+                "lots of yaps, league, val & wordle\n"
                 "czech & english chat\n"
             )
             break
@@ -49,8 +49,8 @@ async def warn_user(user, channel, reason=""):
             for channel_ in user.guild.channels:
                 await channel_.set_permissions(role, send_messages=False)
         await user.add_roles(role)
-        muted_until[user_id] = time.time() + 5 * 60 * 60  # 5 hours
-        await channel.send(f'{user.mention} has been muted for 5 hours due to 3 warnings ♡', delete_after=5)
+        muted_until[user_id] = time.time() + 10 * 60 * 60  # 10 hours
+        await channel.send(f'{user.mention} has been muted due to 3 warnings ♡', delete_after=5)
         warn_counts[user_id] = 0  # reset warns
         def is_from_user(m):
             return m.author.id == user_id
@@ -74,11 +74,31 @@ async def on_message(message):
                 await message.channel.send(f'{message.author.mention} has been unmuted ♡', delete_after=3)
             del muted_until[user_id]
 
-    # --- automod: discord invite links ---
-    if re.search(r"(discord\.gg/|discord\.com/invite/)", message.content.lower()):
-        await message.delete()
-        await warn_user(message.author, message.channel, reason="invite link")
-        return
+    # --- automod: block discord invites and suspicious links ---
+    safe_domains = [
+        "discord.gg", "discord.com", "youtube.com", "youtu.be",
+        "twitter.com", "x.com", "twitch.tv", "instagram.com", "reddit.com"
+    ]
+    url_match = re.search(r"https?://([a-zA-Z0-9.-]+)", message.content.lower())
+    is_invite = re.search(r"(discord\.gg/|discord\.com/invite/)", message.content.lower())
+    if url_match or is_invite:
+        domain = url_match.group(1) if url_match else ""
+        # If it's a discord invite or not a safe domain, delete and mute
+        if is_invite or not any(safe in domain for safe in safe_domains):
+            await message.delete()
+            # Mute immediately for 10 hours
+            role = discord.utils.get(message.guild.roles, name="muted")
+            if not role:
+                role = await message.guild.create_role(name="muted")
+                for channel_ in message.guild.channels:
+                    await channel_.set_permissions(role, send_messages=False)
+            await message.author.add_roles(role)
+            muted_until[message.author.id] = time.time() + 10 * 60 * 60  # 10 hours
+            await message.channel.send(
+                f'{message.author.mention} has been muted for sending a link to chat ♡',
+                delete_after=5
+            )
+            return
 
     # --- automod: simple spam detection + warn/mute system ---
     spam_tracker.setdefault(user_id, [])
@@ -151,21 +171,5 @@ async def on_message(message):
             await message.channel.send(f'cleared {len(deleted)-1} messages ♡', delete_after=2)
         else:
             await message.channel.send('nono, u cant do that')
-
-    # --- report command ---
-    if message.content.startswith('/report'):
-        if message.mentions:
-            reported = message.mentions[0]
-            reason = message.content.split(' ', 2)[2] if len(message.content.split(' ', 2)) > 2 else "No reason given"
-            log_channel = discord.utils.get(message.guild.text_channels, name="mod-logs")
-            if log_channel:
-                await log_channel.send(
-                    f" **report!**\nreporter: {message.author.mention}\nreported: {reported.mention}\nreason: {reason}"
-                )
-                await message.channel.send("your report has been sent, thank you")
-            else:
-                await message.channel.send("couldn't find a #mod-logs channel to send the report.")
-        else:
-            await message.channel.send("please mention a user to report w a reason example: `/report @user spamming`")
 
 client.run(os.environ['DISCORD_TOKEN'])

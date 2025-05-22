@@ -2,6 +2,8 @@ import discord
 import re
 import time
 import os
+import asyncio
+import random
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -13,6 +15,63 @@ warn_counts = {}
 muted_until = {}
 SPAM_TIME = 5
 SPAM_COUNT = 8
+
+# --- Scheduled posting in #yap every 20 minutes ---
+async def post_in_yap():
+    await client.wait_until_ready()
+    while not client.is_closed():
+        for guild in client.guilds:
+            channel = discord.utils.get(guild.text_channels, name="yap")
+            if channel:
+                cat_messages = [
+                    "https://cataas.com/cat",
+                    "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif",
+                    "https://i.imgur.com/4AiXzf8.jpg",
+                    "cat fact: meow",
+                    "https://www.youtube.com/watch?v=5dsGWM5XGdg",
+                    "https://media.giphy.com/media/mlvseq9yvZhba/giphy.gif",
+                    "show us your cat!",
+                    "if you had nine lives, how would you spend them?",
+                    "https://i.imgur.com/8bFQw2F.png",
+                    "give me a cat confession, hi chat",
+                ]
+                league_messages = [
+                    "how to make ur life easier? if in doubt, blame the jungler (just kidding, not really...)",
+                    "i love lux – because sometimes you just want to press R",
+                    "hi chat, https://i.imgur.com/8p0hK7F.png",
+                    "check out patch notes! https://www.leagueoflegends.com/en-us/news/tags/patch-notes/",
+                    "who’s your main in league, drop it below!",
+                    "hi chat, https://www.youtube.com/watch?v=BGtROJeMPeE",
+                    "if you could delete one champ forever, who would it be?",
+                    "let me know ur favorite skin :()",
+                    "ranked or ARAM tonight? let us know!",
+                ]
+                valo_messages = [
+                    "who’s your favorite agent?",
+                    "i personally hate sage",
+                    "what’s your go-to excuse for losing a round?",
+                    "if valorant had a cat agent, what would its ability be?",
+                ]
+                wordle_messages = [
+                    "time to blow ur brains out, wordle !! https://www.nytimes.com/games/wordle/index.html",
+                    "how did u do that in wordle?",
+                    "what's ur starting word in wordle?",
+                    "wordle at midnight: the real adulting.",
+                ]
+                
+                # Pick one category at random, then one message from that category
+                categories = [
+                    cat_messages,
+                    league_messages,
+                    valo_messages,
+                    wordle_messages,
+                ]
+                chosen_category = random.choice(categories)
+                chosen_message = random.choice(chosen_category)
+                await channel.send(chosen_message)
+        await asyncio.sleep(60 * 20)  # every 20 minutes
+
+client.loop.create_task(post_in_yap())
 
 @client.event
 async def on_ready():

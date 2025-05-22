@@ -8,7 +8,6 @@ import random
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True  
-client = discord.Client(intents=intents)
 
 spam_tracker = {}
 warn_counts = {}
@@ -71,7 +70,11 @@ async def post_in_yap():
                 await channel.send(chosen_message)
         await asyncio.sleep(60 * 20)  # every 20 minutes
 
-client.loop.create_task(post_in_yap())
+class KittyClient(discord.Client):
+    async def setup_hook(self):
+        self.bg_task = asyncio.create_task(post_in_yap())
+
+client = KittyClient(intents=intents)
 
 @client.event
 async def on_ready():

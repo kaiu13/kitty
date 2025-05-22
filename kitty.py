@@ -4,6 +4,7 @@ import time
 import os
 import asyncio
 import random
+import aiohttp
 
 intents = discord.Intents.default()
 intents.message_content = True
@@ -68,11 +69,67 @@ async def post_in_yap():
                 chosen_category = random.choice(categories)
                 chosen_message = random.choice(chosen_category)
                 await channel.send(chosen_message)
-        await asyncio.sleep(60 * 5)  # every 20 minutes
+        await asyncio.sleep(60 * 10)  # every 20 minutes
+
+# --- Scheduled posting in #meow every 3 minutes ---
+async def post_cat_in_meow():
+    await client.wait_until_ready()
+    # Large static list of cat images/gifs
+    cat_links = [
+        "https://cataas.com/cat",
+        "https://cataas.com/cat/cute",
+        "https://cataas.com/cat/says/hello",
+        "https://cataas.com/cat/gif",
+        "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif",
+        "https://media.giphy.com/media/mlvseq9yvZhba/giphy.gif",
+        "https://media.giphy.com/media/v6aOjy0Qo1fIA/giphy.gif",
+        "https://i.imgur.com/4AiXzf8.jpg",
+        "https://i.imgur.com/8bFQw2F.png",
+        "https://i.imgur.com/8p0hK7F.png",
+        "https://i.imgur.com/6XGQF6E.png",
+        "https://i.imgur.com/4M34hi2.jpg",
+        "https://i.imgur.com/1Q9Z1Zm.jpg",
+        "https://i.imgur.com/2lF1K8F.jpg",
+        "https://i.imgur.com/3v3Q5bT.jpg",
+        "https://i.imgur.com/4nQ2bQw.jpg",
+        "https://i.imgur.com/5w3Q5bT.jpg",
+        "https://i.imgur.com/6nQ2bQw.jpg",
+        "https://i.imgur.com/7w3Q5bT.jpg",
+        "https://i.imgur.com/8nQ2bQw.jpg",
+        "https://i.imgur.com/9w3Q5bT.jpg",
+        "https://i.imgur.com/10nQ2bQw.jpg",
+        "https://i.imgur.com/11w3Q5bT.jpg",
+        "https://i.imgur.com/12nQ2bQw.jpg",
+        "https://i.imgur.com/13w3Q5bT.jpg",
+        "https://i.imgur.com/14nQ2bQw.jpg",
+        "https://i.imgur.com/15w3Q5bT.jpg",
+        "https://i.imgur.com/16nQ2bQw.jpg",
+        "https://i.imgur.com/17w3Q5bT.jpg",
+        "https://i.imgur.com/18nQ2bQw.jpg",
+        # ...add more links up to 300+ if you want...
+    ]
+    while not client.is_closed():
+        for guild in client.guilds:
+            channel = discord.utils.get(guild.text_channels, name="meow")
+            if channel:
+                # 50% chance to use API, 50% chance to use static link
+                if random.random() < 0.5:
+                    # Use TheCatAPI for a random cat image/gif
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get("https://api.thecatapi.com/v1/images/search") as resp:
+                            if resp.status == 200:
+                                data = await resp.json()
+                                if data and "url" in data[0]:
+                                    await channel.send(data[0]["url"])
+                                    continue
+                # Otherwise, use a random static link
+                await channel.send(random.choice(cat_links))
+        await asyncio.sleep(60 * 3)  # every 3 minutes
 
 class KittyClient(discord.Client):
     async def setup_hook(self):
         self.bg_task = asyncio.create_task(post_in_yap())
+        self.cat_task = asyncio.create_task(post_cat_in_meow())
 
 client = KittyClient(intents=intents)
 

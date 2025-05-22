@@ -68,7 +68,7 @@ async def post_in_yap():
                 chosen_category = random.choice(categories)
                 chosen_message = random.choice(chosen_category)
                 await channel.send(chosen_message)
-        await asyncio.sleep(60 * 20)  # every 20 minutes
+        await asyncio.sleep(60 * 5)  # every 20 minutes
 
 class KittyClient(discord.Client):
     async def setup_hook(self):

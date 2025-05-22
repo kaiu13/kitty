@@ -41,7 +41,7 @@ async def post_in_yap():
                     "hi chat, https://i.imgur.com/8p0hK7F.png",
                     "check out patch notes! https://www.leagueoflegends.com/en-us/news/tags/patch-notes/",
                     "who’s your main in league, drop it below!",
-                    "hi chat, https://www.youtube.com/watch?v=BGtROJeMPeE",
+                    "hi chat"
                     "if you could delete one champ forever, who would it be?",
                     "let me know ur favorite skin :()",
                     "ranked or ARAM tonight? let us know!",
@@ -69,7 +69,7 @@ async def post_in_yap():
                 chosen_category = random.choice(categories)
                 chosen_message = random.choice(chosen_category)
                 await channel.send(chosen_message)
-        await asyncio.sleep(60 * 10)  # every 20 minutes
+        await asyncio.sleep(60 * 60)  # every 20 minutes
 
 # --- Scheduled posting in #meow every 3 minutes ---
 async def post_cat_in_meow():

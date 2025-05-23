@@ -16,7 +16,7 @@ muted_until = {}
 SPAM_TIME = 5
 SPAM_COUNT = 8
 
-# --- Scheduled posting in #yap every 20 minutes ---
+# --- Scheduled posting in #yap every 5 hours ---
 async def post_in_yap():
     await client.wait_until_ready()
     while not client.is_closed():
@@ -41,7 +41,7 @@ async def post_in_yap():
                     "hi chat, https://i.imgur.com/8p0hK7F.png",
                     "check out patch notes! https://www.leagueoflegends.com/en-us/news/tags/patch-notes/",
                     "who’s your main in league, drop it below!",
-                    "hi chat"
+                    "hi chat, https://www.youtube.com/watch?v=BGtROJeMPeE",
                     "if you could delete one champ forever, who would it be?",
                     "let me know ur favorite skin :()",
                     "ranked or ARAM tonight? let us know!",
@@ -69,44 +69,11 @@ async def post_in_yap():
                 chosen_category = random.choice(categories)
                 chosen_message = random.choice(chosen_category)
                 await channel.send(chosen_message)
-        await asyncio.sleep(60 * 60)  # every 20 minutes
-
-# --- Scheduled posting in #meow every 3 minutes ---
-async def post_cat_in_meow():
-    await client.wait_until_ready()
-    # Large static list of cat images/gifs
-    cat_links = [
-        "https://cataas.com/cat",
-        "https://cataas.com/cat/cute",
-        "https://cataas.com/cat/says/hello",
-        "https://cataas.com/cat/gif",
-        "https://media.giphy.com/media/JIX9t2j0ZTN9S/giphy.gif",
-        "https://media.giphy.com/media/mlvseq9yvZhba/giphy.gif",
-        "https://media.giphy.com/media/v6aOjy0Qo1fIA/giphy.gif",
-        # ...add more links up to 300+ if you want...
-    ]
-    while not client.is_closed():
-        for guild in client.guilds:
-            channel = discord.utils.get(guild.text_channels, name="meow")
-            if channel:
-                # 50% chance to use API, 50% chance to use static link
-                if random.random() < 0.5:
-                    # Use TheCatAPI for a random cat image/gif
-                    async with aiohttp.ClientSession() as session:
-                        async with session.get("https://api.thecatapi.com/v1/images/search") as resp:
-                            if resp.status == 200:
-                                data = await resp.json()
-                                if data and "url" in data[0]:
-                                    await channel.send(data[0]["url"])
-                                    continue
-                # Otherwise, use a random static link
-                await channel.send(random.choice(cat_links))
-        await asyncio.sleep(60 * 3)  # every 3 minutes
+        await asyncio.sleep(60 * 60 * 5)  # every 5 hours
 
 class KittyClient(discord.Client):
     async def setup_hook(self):
         self.bg_task = asyncio.create_task(post_in_yap())
-        self.cat_task = asyncio.create_task(post_cat_in_meow())
 
 client = KittyClient(intents=intents)
 
@@ -170,17 +137,21 @@ async def on_message(message):
                 await message.channel.send(f'{message.author.mention} has been unmuted ♡', delete_after=3)
             del muted_until[user_id]
 
-    # --- automod: block discord invites and suspicious links ---
+    # --- automod: block discord invites and suspicious links, but allow gifs ---
     safe_domains = [
         "discord.gg", "discord.com", "youtube.com", "youtu.be",
         "twitter.com", "x.com", "twitch.tv", "instagram.com", "reddit.com"
     ]
-    url_match = re.search(r"https?://([a-zA-Z0-9.-]+)", message.content.lower())
+    url_match = re.search(r"https?://([a-zA-Z0-9.-]+)([^\s]*)", message.content.lower())
     is_invite = re.search(r"(discord\.gg/|discord\.com/invite/)", message.content.lower())
     if url_match or is_invite:
         domain = url_match.group(1) if url_match else ""
+        path = url_match.group(2) if url_match else ""
+        # Allow gifs (if .gif in the url path)
+        if ".gif" in path:
+            pass  # allow gif, do nothing
         # If it's a discord invite or not a safe domain, delete and mute
-        if is_invite or not any(safe in domain for safe in safe_domains):
+        elif is_invite or not any(safe in domain for safe in safe_domains):
             await message.delete()
             # Mute immediately for 10 hours
             role = discord.utils.get(message.guild.roles, name="muted")

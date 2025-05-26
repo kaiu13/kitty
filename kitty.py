@@ -92,14 +92,14 @@ async def on_member_join(member):
     role = discord.utils.get(member.guild.roles, name="kitty")
     if role:
         await member.add_roles(role, reason="Autorole on join")
-    for channel in member.guild.text_channels:
-        if channel.permissions_for(member.guild.me).send_messages:
-            await channel.send(
-                f"welcome, {member.mention} ♡\n"
-                "lots of yaps, league, val & wordle\n"
-                "czech & english chat\n"
-            )
-            break
+    # Always send welcome in the 'hi' channel
+    channel = discord.utils.get(member.guild.text_channels, name="yap")
+    if channel and channel.permissions_for(member.guild.me).send_messages:
+        await channel.send(
+            f"welcome, {member.mention} ♡\n"
+            "lots of yaps, league, val & wordle\n"
+            "czech & english chat\n"
+        )
 
 async def warn_user(user, channel, reason=""):
     user_id = user.id

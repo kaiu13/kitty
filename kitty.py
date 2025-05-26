@@ -239,4 +239,75 @@ async def on_message(message):
         else:
             await message.channel.send('nono, u cant do that')
 
+            # Map your custom emoji IDs to role names
+emoji_to_role = {
+    "<:blue:1376555068555395206>": "blue",
+    "<:green:1376555132086521987>": "green",
+    "<:red:1376555173723242547>": "red",
+    "<:lightpink:1376555262370119731>": "light pink"
+}
+
+role_message_id = None  # Will store the ID of the bot's message
+
+@client.event
+async def on_ready():
+    print(f'♡ {client.user}')
+    streaming = discord.Streaming(
+        name="kitty",
+        url="https://twitch.tv/discord"
+    )
+    await client.change_presence(activity=streaming)
+
+    # --- Reaction role message setup ---
+    global role_message_id
+    channel = discord.utils.get(client.get_all_channels(), name="roles")
+    if channel:
+        async for msg in channel.history(limit=20):
+            if msg.author == client.user and "get a role below to customize yourself" in msg.content:
+                role_message_id = msg.id
+                break
+        else:
+            msg = await channel.send(
+                "(one reaction at a time)\n"
+            )
+            role_message_id = msg.id
+            for emoji in emoji_to_role:
+                await msg.add_reaction(emoji)
+
+@client.event
+async def on_raw_reaction_add(payload):
+    if payload.message_id != role_message_id:
+        return
+    guild = client.get_guild(payload.guild_id)
+    if not guild:
+        return
+    emoji_str = str(payload.emoji)
+    role_name = emoji_to_role.get(emoji_str)
+    if not role_name:
+        return
+    role = discord.utils.get(guild.roles, name=role_name)
+    if not role:
+        return
+    member = guild.get_member(payload.user_id)
+    if member:
+        await member.add_roles(role)
+
+@client.event
+async def on_raw_reaction_remove(payload):
+    if payload.message_id != role_message_id:
+        return
+    guild = client.get_guild(payload.guild_id)
+    if not guild:
+        return
+    emoji_str = str(payload.emoji)
+    role_name = emoji_to_role.get(emoji_str)
+    if not role_name:
+        return
+    role = discord.utils.get(guild.roles, name=role_name)
+    if not role:
+        return
+    member = guild.get_member(payload.user_id)
+    if member:
+        await member.remove_roles(role)
+
 client.run(os.environ['DISCORD_TOKEN'])

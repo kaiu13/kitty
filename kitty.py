@@ -241,10 +241,10 @@ async def on_message(message):
 
             # Map your custom emoji IDs to role names
 emoji_to_role = {
-    "<:blue:1376555068555395206>": "blue",
-    "<:green:1376555132086521987>": "green",
-    "<:red:1376555173723242547>": "red",
-    "<:lightpink:1376555262370119731>": "light pink"
+    "<:blue:1376550929280794765>": "blue",
+    "<:green:1376550931600117850>": "green",
+    "<:red:1376550939913359441>": "red",
+    "<:lightpink:1376550927850541117>": "lightpink"
 }
 
 role_message_id = None  # Will store the ID of the bot's message
@@ -268,6 +268,7 @@ async def on_ready():
                 break
         else:
             msg = await channel.send(
+                "get a role below to customize yourself\n"
                 "(one reaction at a time)\n"
             )
             role_message_id = msg.id

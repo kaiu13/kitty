@@ -92,7 +92,7 @@ async def on_member_join(member):
     role = discord.utils.get(member.guild.roles, name="kitty")
     if role:
         await member.add_roles(role, reason="Autorole on join")
-    # Always send welcome in the 'hi' channel
+    # Always send welcome in the 'yap' channel
     channel = discord.utils.get(member.guild.text_channels, name="yap")
     if channel and channel.permissions_for(member.guild.me).send_messages:
         await channel.send(
@@ -136,36 +136,6 @@ async def on_message(message):
                 await message.author.remove_roles(role)
                 await message.channel.send(f'{message.author.mention} has been unmuted ♡', delete_after=3)
             del muted_until[user_id]
-
-    # --- automod: block discord invites and suspicious links, but allow gifs ---
-    safe_domains = [
-        "discord.gg", "discord.com", "youtube.com", "youtu.be",
-        "twitter.com", "x.com", "twitch.tv", "instagram.com", "reddit.com"
-    ]
-    url_match = re.search(r"https?://([a-zA-Z0-9.-]+)([^\s]*)", message.content.lower())
-    is_invite = re.search(r"(discord\.gg/|discord\.com/invite/)", message.content.lower())
-    if url_match or is_invite:
-        domain = url_match.group(1) if url_match else ""
-        path = url_match.group(2) if url_match else ""
-        # Allow gifs (if .gif in the url path)
-        if ".gif" in path:
-            pass  # allow gif, do nothing
-        # If it's a discord invite or not a safe domain, delete and mute
-        elif is_invite or not any(safe in domain for safe in safe_domains):
-            await message.delete()
-            # Mute immediately for 10 hours
-            role = discord.utils.get(message.guild.roles, name="muted")
-            if not role:
-                role = await message.guild.create_role(name="muted")
-                for channel_ in message.guild.channels:
-                    await channel_.set_permissions(role, send_messages=False)
-            await message.author.add_roles(role)
-            muted_until[message.author.id] = time.time() + 10 * 60 * 60  # 10 hours
-            await message.channel.send(
-                f'{message.author.mention} has been muted for sending a link to chat ♡',
-                delete_after=5
-            )
-            return
 
     # --- automod: simple spam detection + warn/mute system ---
     spam_tracker.setdefault(user_id, [])
@@ -239,7 +209,7 @@ async def on_message(message):
         else:
             await message.channel.send('nono, u cant do that')
 
-            # Map your custom emoji IDs to role names
+# Map your custom emoji IDs to role names
 emoji_to_role = {
     "<:blue:1376550929280794765>": "blue",
     "<:green:1376550931600117850>": "green",
